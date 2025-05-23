@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Flag Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a0ca3;
+            --correct: #4cc9f0;
+            --wrong: #f72585;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #333;
+            --hint: #ff9f1c;
+        }
+        .dark-mode {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #f0f0f0;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: all 0.3s;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .game-card {
+            background-color: var(--card);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .flag-container {
+            position: relative;
+            margin: 20px auto;
+            width: 250px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .flag-container:hover {
+            transform: scale(1.03);
+        }
+        .flag-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 25px 0;
+        }
+        @media (max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .option-btn {
+            padding: 12px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-btn:hover:not(:disabled) {
+            background-color: var(--primary);
+            color: white;
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .option-btn.correct {
+            background-color: var(--correct);
+            border-color: var(--correct);
+            color: white;
+            animation: pulse 0.5s;
+        }
+        .option-btn.wrong {
+            background-color: var(--wrong);
+            border-color: var(--wrong);
+            color: white;
+            animation: shake 0.5s;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        .btn-secondary {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        .btn-secondary:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            background-color: rgba(67, 97, 238, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 80px;
+        }
+        .stat-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border-radius: 15px;
+            z-index: 10;
+            padding: 30px;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .game-over.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--correct);
+        }
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .mode-btn {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            border: none;
+            transition: all 0.2s;
+        }
+        .mode-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        .difficulty-selector {
+            margin: 15px 0;
+            text-align: center;
+        }
+        .hint-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--hint);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .flag-wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(90deg, transparent, rgba(67, 97, 238, 0.3), transparent);
+            animation: wave 3s linear infinite;
+        }
+        @keyframes wave {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .settings-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text);
+        }
+        .settings-menu {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background-color: var(--card);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            z-index: 5;
+            display: none;
+        }
+        .settings-menu.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌍 Ultimate Flag Quiz</h1>
+            <div>
+                <button class="settings-btn" id="settingsBtn">⚙️</button>
+                <div class="settings-menu" id="settingsMenu">
+                    <button class="mode-btn" id="darkModeBtn">Dark Mode</button>
+                    <button class="mode-btn" id="soundToggle">🔊 Sound On</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-card">
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="classic">Classic</button>
+                <button class="mode-btn" data-mode="time">Time Attack</button>
+                <button class="mode-btn" data-mode="survival">Survival</button>
+            </div>
+
+            <div class="difficulty-selector">
+                <button class="mode-btn active" data-difficulty="easy">Easy</button>
+                <button class="mode-btn" data-difficulty="medium">Medium</button>
+                <button class="mode-btn" data-difficulty="hard">Hard</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-box">
+                    <div>Score</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-box">
+                    <div>High Score</div>
+                    <div class="stat-value" id="highScore">0</div>
+                </div>
+                <div class="stat-box" id="timerBox">
+                    <div>Time</div>
+                    <div class="stat-value" id="timer">0s</div>
+                </div>
+                <div class="stat-box" id="livesBox">
+                    <div>Lives</div>
+                    <div class="stat-value" id="lives">3</div>
+                </div>
+            </div>
+
+            <div class="flag-container">
+                <img id="flagImg" class="flag-img" src="" alt="Country Flag">
+                <div class="flag-wave"></div>
+                <button class="hint-btn" id="hintBtn">?</button>
+            </div>
+
+            <div class="options-grid" id="optionsGrid"></div>
+
+            <div class="controls">
+                <button class="btn btn-secondary" id="skipBtn">⏭️ Skip</button>
+                <button class="btn btn-primary" id="nextBtn" disabled>Next ➡️</button>
+            </div>
+
+            <div class="game-over" id="gameOver">
+                <h2>Game Over!</h2>
+                <p id="finalScore">Your score: 0</p>
+                <p id="highScoreText">High score: 0</p>
+                <button class="btn btn-primary" id="restartBtn">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="correctSound" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3"></audio>
+    <audio id="wrongSound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
+    <audio id="gameOverSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-explosion-2759.mp3"></audio>
+
+    <script>
+        // DOM Elements
+        const flagImg = document.getElementById('flagImg');
+        const optionsGrid = document.getElementById('optionsGrid');
+        const scoreElement = document.getElementById('score');
+        const highScoreElement = document.getElementById('highScore');
+        const nextBtn = document.getElementById('nextBtn');
+        const skipBtn = document.getElementById('skipBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const timerElement = document.getElementById('timer');
+        const gameOverElement = document.getElementById('gameOver');
+        const finalScoreElement = document.getElementById('finalScore');
+        const highScoreTextElement = document.getElementById('highScoreText');
+        const livesElement = document.getElementById('lives');
+        const hintBtn = document.getElementById('hintBtn');
+        const darkModeBtn = document.getElementById('darkModeBtn');
+        const soundToggle = document.getElementById('soundToggle');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsMenu = document.getElementById('settingsMenu');
+        const timerBox = document.getElementById('timerBox');
+        const livesBox = document.getElementById('livesBox');
+
+        // Audio elements
+        const correctSound = document.getElementById('correctSound');
+        const wrongSound = document.getElementById('wrongSound');
+        const gameOverSound = document.getElementById('gameOverSound');
+
+        // Game Variables
+        let score = 0;
+        let highScore = localStorage.getItem('flagQuizHighScore') || 0;
+        let currentQuestion = 0;
+        let questions = [];
+        let timer = 0;
+        let timerInterval;
+        let isGameRunning = false;
+        let gameMode = 'classic';
+        let difficulty = 'easy';
+        let lives = 3;
+        let soundOn = true;
+
+        // Update high score display
+        highScoreElement.textContent = highScore;
+
+        // Country Flags Data (200+ countries)
+        const countryFlags = [
+            { name: "Afghanistan", code: "af" },
+            { name: "Albania", code: "al" },
+            { name: "Algeria", code: "dz" },
+            // Add all other countries...
+            { name: "Zambia", code: "zm" },
+            { name: "Zimbabwe", code: "zw" }
+        ];
+
+        // Initialize Game
+        function initGame() {
+            score = 0;
+            currentQuestion = 0;
+            timer = 0;
+            lives = gameMode === 'survival' ? 3 : Infinity;
+            isGameRunning = true;
+            
+            // Update UI based on game mode
+            timerBox.style.display = gameMode === 'time' ? 'block' : 'none';
+            livesBox.style.display = gameMode === 'survival' ? 'block' : 'none';
+            livesElement.textContent = lives;
+            
+            // Filter questions by difficulty
+            let questionPool = [...countryFlags];
+            if (difficulty === 'easy') {
+                questionPool = questionPool.slice(0, 50); // First 50 countries
+            } else if (difficulty === 'medium') {
+                questionPool = questionPool.slice(0, 150); // First 150 countries
+            }
+            // Hard uses all countries
+            
+            // Shuffle questions
+            questions = [...questionPool].sort(() => Math.random() - 0.5);
+            
+            // Start timer if in time attack mode
+            clearInterval(timerInterval);
+            if (gameMode === 'time') {
+                timerInterval = setInterval(() => {
+                    timer++;
+                    timerElement.textContent = `${timer}s`;
+                }, 1000);
+            }
+            
+            gameOverElement.classList.remove('show');
+            loadQuestion();
+        }
+
+        // Load Question
+        function loadQuestion() {
+            if (currentQuestion >= questions.length || (gameMode === 'survival' && lives <= 0)) {
+                endGame();
+                return;
+            }
+            
+            const question = questions[currentQuestion];
+            flagImg.src = `https://flagcdn.com/w320/${question.code}.png`;
+            flagImg.alt = `Flag of ${question.name}`;
+            
+            // Generate options
+            const options = [question.name];
+            while (options.length < 4) {
+                const randomCountry = countryFlags[Math.floor(Math.random() * countryFlags.length)].name;
+                if (!options.includes(randomCountry)) {
+                    options.push(randomCountry);
+                }
+            }
+            
+            // Shuffle options
+            options.sort(() => Math.random() - 0.5);
+            
+            // Render options
+            optionsGrid.innerHTML = "";
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = "option-btn";
+                button.textContent = option;
+                button.onclick = () => checkAnswer(option, question.name);
+                optionsGrid.appendChild(button);
+            });
+            
+            // Reset UI
+            nextBtn.disabled = true;
+            scoreElement.textContent = score;
+            hintBtn.disabled = false;
+        }
+
+        // Check Answer
+        function checkAnswer(selected, correct) {
+            if (!isGameRunning) return;
+            
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(button => {
+                button.disabled = true;
+                if (button.textContent === correct) {
+                    button.classList.add('correct');
+                    if (selected === correct) {
+                        score++;
+                        scoreElement.textContent = score;
+                        if (soundOn) correctSound.play();
+                    }
+                } else if (button.textContent === selected) {
+                    button.classList.add('wrong');
+                    if (gameMode === 'survival') {
+                        lives--;
+                        livesElement.textContent = lives;
+                    }
+                    if (soundOn) wrongSound.play();
+                }
+            });
+            
+            nextBtn.disabled = false;
+            hintBtn.disabled = true;
+            
+            // In time attack mode, automatically go to next question after delay
+            if (gameMode === 'time') {
+                setTimeout(() => {
+                    currentQuestion++;
+                    loadQuestion();
+                }, 1500);
+            }
+        }
+
+        // Hint System
+        hintBtn.addEventListener('click', () => {
+            const correctAnswer = questions[currentQuestion].name;
+            const buttons = document.querySelectorAll('.option-btn');
+            const incorrectButtons = Array.from(buttons).filter(btn => btn.textContent !== correctAnswer);
+            
+            // Remove two incorrect options
+            const toRemove = incorrectButtons.slice(0, 2);
+            toRemove.forEach(btn => {
+                btn.style.opacity = '0.3';
+                btn.disabled = true;
+            });
+            
+            hintBtn.disabled = true;
+        });
+
+        // Next Question
+        nextBtn.addEventListener('click', () => {
+            currentQuestion++;
+            loadQuestion();
+        });
+
+        // Skip Question
+        skipBtn.addEventListener('click', () => {
+            if (gameMode === 'survival') {
+                lives--;
+                livesElement.textContent = lives;
+            }
+            currentQuestion++;
+            loadQuestion();
+        });
+
+        // End Game
+        function endGame() {
+            isGameRunning = false;
+            clearInterval(timerInterval);
+            
+            // Update high score
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('flagQuizHighScore', highScore);
+                highScoreElement.textContent = highScore;
+            }
+            
+            // Show game over screen
+            finalScoreElement.textContent = `Your score: ${score}`;
+            highScoreTextElement.textContent = `High score: ${highScore}`;
+            gameOverElement.classList.add('show');
+            
+            if (soundOn) gameOverSound.play();
+        }
+
+        // Restart Game
+        restartBtn.addEventListener('click', initGame);
+
+        // Game Mode Selection
+        document.querySelectorAll('.mode-selector .mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-selector .mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameMode = btn.dataset.mode;
+            });
+        });
+
+        // Difficulty Selection
+        document.querySelectorAll('.difficulty-selector .mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.difficulty-selector .mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                difficulty = btn.dataset.difficulty;
+            });
+        });
+
+        // Dark Mode Toggle
+        darkModeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            darkModeBtn.textContent = document.body.classList.contains('dark-mode') ? '☀️ Light Mode' : '🌙 Dark Mode';
+        });
+
+        // Sound Toggle
+        soundToggle.addEventListener('click', () => {
+            soundOn = !soundOn;
+            soundToggle.textContent = soundOn ? '🔊 Sound On' : '🔇 Sound Off';
+        });
+
+        // Settings Menu Toggle
+        settingsBtn.addEventListener('click', () => {
+            settingsMenu.classList.toggle('show');
+        });
+
+        // Close settings when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!settingsBtn.contains(e.target) && !settingsMenu.contains(e.target)) {
+                settingsMenu.classList.remove('show');
+            }
+        });
+
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
